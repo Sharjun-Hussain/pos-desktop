@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld(
         testDbConnection: (config) => ipcRenderer.invoke('test-db-connection', config),
         runSetupWizard: (data) => ipcRenderer.invoke('run-setup-wizard', data),
         
+        // Printing
+        getPrinters: () => ipcRenderer.invoke('get-printers'),
+        printSilent: (data) => ipcRenderer.invoke('print-silent', data),
+        
         // Generic channels
         send: (channel, data) => {
             let validChannels = ["toMain", "activation-complete", "open-external", "exit-app"];

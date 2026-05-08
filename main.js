@@ -254,6 +254,38 @@ ipcMain.handle('test-db-connection', async (event, config) => {
     }
 });
 
+ipcMain.handle('get-printers', async () => {
+    return await mainWindow.webContents.getPrintersAsync();
+});
+
+ipcMain.handle('print-silent', async (event, { html, printerName, options = {} }) => {
+    const workerWindow = new BrowserWindow({
+        show: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    workerWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+    return new Promise((resolve) => {
+        workerWindow.webContents.on('did-finish-load', () => {
+            workerWindow.webContents.print({
+                silent: true,
+                deviceName: printerName || '',
+                printBackground: true,
+                margins: { marginType: 'none' },
+                ...options
+            }, (success, failureReason) => {
+                workerWindow.close();
+                if (success) resolve({ success: true });
+                else resolve({ success: false, message: failureReason });
+            });
+        });
+    });
+});
+
 ipcMain.handle('run-setup-wizard', async (event, data) => {
     try {
         // 1. Update .env
