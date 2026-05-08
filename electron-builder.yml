@@ -10,8 +10,8 @@ files:
   - main.js
   - preload.js
   - licensing-service.js
-  - activation.html
-  - db-setup.html
+  - setup-wizard.html
+  - setup_wizard_banner_*.png
   - package.json
   - node_modules/**
   - assets/**

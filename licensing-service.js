@@ -26,11 +26,14 @@ class LicensingService {
 
     /**
      * Returns the unique Hardware ID of the machine.
+     * We use { original: true } to get the raw /etc/machine-id value, NOT a hashed
+     * derivative. The hashed version can differ between Electron sandbox contexts
+     * (dev vs .deb vs AppImage), causing false "another device" errors on the same machine.
      */
     getHWID() {
         try {
-            const id = machineIdSync();
-            console.log('📋 Generated HWID:', id);
+            const id = machineIdSync({ original: true });
+            console.log('📋 Generated HWID (raw):', id);
             return id;
         } catch (error) {
             console.error('❌ Failed to get HWID:', error);

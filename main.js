@@ -28,18 +28,19 @@ require('dotenv').config({ path: dotenvPath });
 
 const licensingService = require('./licensing-service');
 
+let setupWindow;
 let mainWindow;
-let activationWindow;
 let backendProcess;
-let dbSetupWindow;
 
-function createDbSetupWindow() {
-    dbSetupWindow = new BrowserWindow({
-        width: 500,
-        height: 700,
+function createSetupWindow() {
+    setupWindow = new BrowserWindow({
+        width: 900,
+        height: 600,
         resizable: false,
         frame: false,
         transparent: true,
+        center: true,
+        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -47,7 +48,11 @@ function createDbSetupWindow() {
         }
     });
 
-    dbSetupWindow.loadFile('db-setup.html');
+    setupWindow.loadFile('setup-wizard.html');
+    setupWindow.once('ready-to-show', () => {
+        setupWindow.show();
+        setupWindow.focus();
+    });
 }
 
 async function checkDbConfigured() {
@@ -90,22 +95,7 @@ function updateEnv(updates) {
     }
 }
 
-function createActivationWindow() {
-    activationWindow = new BrowserWindow({
-        width: 500,
-        height: 650,
-        resizable: false,
-        frame: false,
-        transparent: true,
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true,
-            preload: path.join(__dirname, 'preload.js')
-        }
-    });
 
-    activationWindow.loadFile('activation.html');
-}
 
 function getAppPath(relativeProd, relativeDev) {
     if (app.isPackaged) {
@@ -335,27 +325,22 @@ ipcMain.on('activation-complete', async () => {
     // Check DB first to avoid a moment with no windows open
     const dbOk = await checkDbConfigured();
     
-    // Store references to old windows before creating new ones
-    const oldActivationWindow = activationWindow;
-    const oldDbSetupWindow = dbSetupWindow;
+    // Store references to old window
+    const oldSetupWindow = setupWindow;
 
-    // Clear globals so they don't get accidentally closed if we just recreated them
-    activationWindow = null;
-    dbSetupWindow = null;
+    // Clear global so it doesn't get accidentally closed if we just recreated it
+    setupWindow = null;
     
     if (!dbOk) {
-        createDbSetupWindow();
+        createSetupWindow();
     } else {
         startBackend();
         createWindow();
     }
 
-    // Close the old windows only after the next window is initiated
-    if (oldActivationWindow) {
-        oldActivationWindow.close();
-    }
-    if (oldDbSetupWindow) {
-        oldDbSetupWindow.close();
+    // Close the old window only after the next window is initiated
+    if (oldSetupWindow) {
+        oldSetupWindow.close();
     }
 });
 
@@ -379,11 +364,11 @@ app.whenReady().then(async () => {
             createWindow();
         } else {
             console.log('⚠️  Database not configured. Launching Setup Wizard...');
-            createDbSetupWindow();
+            createSetupWindow();
         }
     } else {
         console.log('❌ License Check Failed:', check.reason);
-        createActivationWindow();
+        createSetupWindow();
     }
 
     app.on('activate', async function () {
@@ -392,9 +377,9 @@ app.whenReady().then(async () => {
             if (check.valid) {
                 const dbOk = await checkDbConfigured();
                 if (dbOk) createWindow();
-                else createDbSetupWindow();
+                else createSetupWindow();
             } else {
-                createActivationWindow();
+                createSetupWindow();
             }
         }
     });

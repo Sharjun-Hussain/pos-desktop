@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inzeedo POS - Setup Wizard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .wizard {
+            width: 900px;
+            height: 580px;
+            display: flex;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+            -webkit-app-region: no-drag;
+            position: relative;
+            animation: fadeUp 0.4s ease-out;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─── LEFT PANEL ─────────────────────────────────────────── */
+        .left-panel {
+            width: 38%;
+            padding: 40px 36px;
+            background: linear-gradient(160deg, rgba(16,185,129,0.15) 0%, rgba(2,6,23,0.95) 60%),
+                        url('./setup_wizard_banner_1778263443071.png') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            -webkit-app-region: drag;
+        }
+
+        .left-panel * {
+            -webkit-app-region: no-drag;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .brand-icon i { color: #10b981; font-size: 20px; }
+
+        .brand-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .brand-name span { color: #10b981; }
+
+        .brand-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1.6;
+        }
+
+        /* ─── RIGHT PANEL ────────────────────────────────────────── */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 44px 48px;
+            background: #0f172a;
+            position: relative;
+            -webkit-app-region: no-drag;
+        }
+
+        /* Close button */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #475569;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            -webkit-app-region: no-drag;
+        }
+        .close-btn:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+        /* Progress bar */
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .step-label-left  { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #10b981; }
+        .step-label-right { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #334155; }
+        .progress-bar     { height: 3px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-bottom: 32px; }
+        .progress-fill    { height: 100%; background: #10b981; width: 50%; transition: width 0.5s ease; border-radius: 2px; }
+
+        /* Step title */
+        .step-title    { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+        .step-subtitle { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+
+        /* Form fields */
+        .field-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #475569;
+            margin-bottom: 8px;
+            margin-left: 2px;
+        }
+
+        .field-wrap { position: relative; margin-bottom: 18px; }
+        .field-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #475569; font-size: 13px; }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            background: rgba(2,6,23,0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            color: #f8fafc;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-app-region: no-drag;
+        }
+
+        input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+        }
+
+        /* HWID Box */
+        .hwid-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: rgba(16,185,129,0.05);
+            border: 1px solid rgba(16,185,129,0.1);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+        }
+        .hwid-box i     { color: #10b981; margin-top: 2px; }
+        .hwid-label     { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #475569; margin-bottom: 4px; }
+        .hwid-value     { font-size: 11px; font-family: monospace; color: rgba(16,185,129,0.8); word-break: break-all; }
+
+        /* Primary Button */
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            -webkit-app-region: no-drag;
+            margin-top: 4px;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(16,185,129,0.3);
+        }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Secondary Button */
+        .btn-secondary {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            -webkit-app-region: no-drag;
+            white-space: nowrap;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        /* Status text */
+        .status-text { font-size: 12px; text-align: center; margin-top: 12px; min-height: 18px; }
+        .status-text.success { color: #10b981; }
+        .status-text.error   { color: #f87171; }
+        .status-text.loading { color: #60a5fa; }
+
+        /* Divider */
+        .divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0; }
+
+        /* DB grid */
+        .db-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        .db-grid .span-2 { grid-column: span 2; }
+
+        /* MySQL hint row */
+        .mysql-hint {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(59,130,246,0.05);
+            border: 1px solid rgba(59,130,246,0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+        .mysql-hint p { font-size: 11px; color: #64748b; }
+        .mysql-hint a { color: #60a5fa; text-decoration: none; }
+        .mysql-hint a:hover { text-decoration: underline; }
+
+        /* Step visibility */
+        .step { display: none; flex-direction: column; flex: 1; }
+        .step.active { display: flex; }
+    </style>
+</head>
+<body>
+<div class="wizard">
+
+    <!-- ─── LEFT PANEL ───────────────────────────────── -->
+    <div class="left-panel">
+        <div>
+            <div class="brand-icon"><i class="fas fa-bolt"></i></div>
+            <div class="brand-name">Inzeedo <span>POS</span></div>
+            <div class="brand-desc">Industrial Grade Point of Sale System. Complete the setup to begin your business journey.</div>
+        </div>
+    </div>
+
+    <!-- ─── RIGHT PANEL ──────────────────────────────── -->
+    <div class="right-panel">
+
+        <!-- Close -->
+        <button class="close-btn" onclick="window.api.exitApp()"><i class="fas fa-times"></i></button>
+
+        <!-- Progress -->
+        <div class="progress-header">
+            <span class="step-label-left"  id="stepIndicator">Step 1 of 2</span>
+            <span class="step-label-right" id="stepName">Device Activation</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+        <!-- ─── STEP 1: ACTIVATION ─── -->
+        <div class="step active" id="stepActivation">
+            <div class="step-title">Activate Device</div>
+            <div class="step-subtitle">Enter your license key to authorize this terminal.</div>
+
+            <label class="field-label">License Key</label>
+            <div class="field-wrap">
+                <i class="fas fa-key field-icon"></i>
+                <input type="text" id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family: monospace; letter-spacing: 2px;">
+            </div>
+
+            <div class="hwid-box">
+                <i class="fas fa-fingerprint"></i>
+                <div>
+                    <div class="hwid-label">Hardware Fingerprint</div>
+                    <div class="hwid-value" id="hwidDisplay">Detecting hardware ID...</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="activateBtn">
+                <span>Activate &amp; Continue</span>
+                <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+            </button>
+            <div class="status-text" id="activationStatus"></div>
+        </div>
+
+        <!-- ─── STEP 2: DATABASE ─── -->
+        <div class="step" id="stepDatabase">
+            <div class="step-title">Database Configuration</div>
+            <div class="step-subtitle">Connect Inzeedo POS to your local MySQL server.</div>
+
+            <div class="mysql-hint">
+                <p>Need MySQL? <a href="#" onclick="window.api.send('open-external','https://dev.mysql.com/downloads/installer/'); return false;">Download Installer →</a></p>
+                <button class="btn-secondary" id="testDbBtn">Test Connection</button>
+            </div>
+
+            <div class="db-grid">
+                <div class="span-2">
+                    <label class="field-label">Host</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-server field-icon"></i>
+                        <input type="text" id="dbHost" value="127.0.0.1">
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Port</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-plug field-icon"></i>
+                        <input type="number" id="dbPort" value="3306">
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Database</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-database field-icon"></i>
+                        <input type="text" id="dbName" value="pos_system">
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Username</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" id="dbUser" value="root">
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label">Password</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="dbPassword" placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="finishBtn" style="margin-top: auto;">
+                <span>Initialize System</span>
+                <i class="fas fa-check-circle" style="font-size:13px;"></i>
+            </button>
+            <div class="status-text" id="dbStatus"></div>
+        </div>
+
+    </div><!-- /right-panel -->
+</div><!-- /wizard -->
+
+<script>
+    // ─── HWID ─────────────────────────────────────────────────────
+    window.api.getHWID().then(function(id) {
+        document.getElementById('hwidDisplay').innerText = id;
+    }).catch(function() {
+        document.getElementById('hwidDisplay').innerText = 'Unable to detect';
+    });
+
+    // ─── PROGRESS ─────────────────────────────────────────────────
+    function goToStep(n) {
+        document.getElementById('stepActivation').classList.toggle('active', n === 1);
+        document.getElementById('stepDatabase').classList.toggle('active', n === 2);
+        document.getElementById('stepIndicator').innerText = 'Step ' + n + ' of 2';
+        document.getElementById('stepName').innerText      = n === 1 ? 'Device Activation' : 'Database Setup';
+        document.getElementById('progressFill').style.width = n === 1 ? '50%' : '100%';
+    }
+
+    // ─── STEP 1 — ACTIVATION ──────────────────────────────────────
+    document.getElementById('activateBtn').addEventListener('click', async function() {
+        var key = document.getElementById('licenseKey').value.trim();
+        if (!key) { return setStatus('activationStatus', 'Please enter a license key.', 'error'); }
+
+        setBtnLoading('activateBtn', true, 'Processing...');
+        setStatus('activationStatus', 'Connecting to Inzeedo Secure...', 'loading');
+
+        try {
+            var result = await window.api.activateLicense(key);
+            if (result.success) {
+                setStatus('activationStatus', 'Device activated successfully!', 'success');
+                setTimeout(function() { goToStep(2); }, 1200);
+            } else {
+                setStatus('activationStatus', result.message || 'Activation failed.', 'error');
+                setBtnLoading('activateBtn', false, '<span>Activate &amp; Continue</span><i class="fas fa-arrow-right" style="font-size:12px;"></i>');
+            }
+        } catch(e) {
+            setStatus('activationStatus', 'Connection error. Try again.', 'error');
+            setBtnLoading('activateBtn', false, '<span>Activate &amp; Continue</span><i class="fas fa-arrow-right" style="font-size:12px;"></i>');
+        }
+    });
+
+    // ─── STEP 2 — DB TEST ─────────────────────────────────────────
+    document.getElementById('testDbBtn').addEventListener('click', async function() {
+        var btn = document.getElementById('testDbBtn');
+        btn.disabled = true;
+        btn.innerText = 'Testing...';
+        setStatus('dbStatus', 'Testing connection...', 'loading');
+
+        try {
+            var result = await window.api.testDbConnection({
+                host:     document.getElementById('dbHost').value,
+                port:     document.getElementById('dbPort').value,
+                user:     document.getElementById('dbUser').value,
+                password: document.getElementById('dbPassword').value
+            });
+            setStatus('dbStatus', result.success ? 'Connection successful!' : (result.message || 'Connection failed.'), result.success ? 'success' : 'error');
+        } catch(e) {
+            setStatus('dbStatus', 'Connection failed. Is MySQL running?', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Test Connection';
+        }
+    });
+
+    // ─── STEP 2 — FINISH ──────────────────────────────────────────
+    document.getElementById('finishBtn').addEventListener('click', async function() {
+        setBtnLoading('finishBtn', true, 'Initializing...');
+        setStatus('dbStatus', 'Running bootstrap scripts. This may take a moment...', 'loading');
+
+        try {
+            var result = await window.api.runSetupWizard({
+                db: {
+                    host: document.getElementById('dbHost').value,
+                    port: document.getElementById('dbPort').value,
+                    name: document.getElementById('dbName').value,
+                    user: document.getElementById('dbUser').value,
+                    pass: document.getElementById('dbPassword').value
+                }
+            });
+
+            if (result.success) {
+                setStatus('dbStatus', 'System ready! Launching...', 'success');
+                setTimeout(function() { window.api.send('activation-complete'); }, 2000);
+            } else {
+                setStatus('dbStatus', result.message || 'Setup failed.', 'error');
+                setBtnLoading('finishBtn', false, '<span>Initialize System</span><i class="fas fa-check-circle" style="font-size:13px;"></i>');
+            }
+        } catch(e) {
+            setStatus('dbStatus', 'Critical error during setup.', 'error');
+            setBtnLoading('finishBtn', false, '<span>Initialize System</span><i class="fas fa-check-circle" style="font-size:13px;"></i>');
+        }
+    });
+
+    // ─── HELPERS ──────────────────────────────────────────────────
+    function setStatus(id, msg, type) {
+        var el = document.getElementById(id);
+        el.innerText = msg;
+        el.className = 'status-text ' + type;
+    }
+
+    function setBtnLoading(id, loading, html) {
+        var btn = document.getElementById(id);
+        btn.disabled = loading;
+        if (loading) {
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> &nbsp;' + html;
+        } else {
+            btn.innerHTML = html;
+        }
+    }
+</script>
+</body>
+</html>
