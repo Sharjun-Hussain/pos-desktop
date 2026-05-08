@@ -16,6 +16,8 @@ files:
   - node_modules/**
   - assets/**
   - keys/**
+
+extraResources:
   - from: ../backend
     to: backend
     filter:

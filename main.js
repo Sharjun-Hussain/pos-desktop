@@ -11,8 +11,8 @@ const dotenvPath = app.isPackaged
 
 // Ensure .env exists in userData for production
 if (app.isPackaged && !fs.existsSync(dotenvPath)) {
-    // We'll bundle .env.example as a template
-    const templatePath = path.join(__dirname, 'backend/.env.example');
+    // Template is in extraResources
+    const templatePath = path.join(process.resourcesPath, 'backend/.env.example');
     try {
         if (fs.existsSync(templatePath)) {
             fs.copyFileSync(templatePath, dotenvPath);
@@ -77,9 +77,11 @@ function updateEnv(updates) {
             } else {
                 content += `\n${key}=${value}`;
             }
+            // Manually update process.env because dotenv won't overwrite existing variables
+            process.env[key] = value;
         }
         fs.writeFileSync(dotenvPath, content);
-        // Reload process.env
+        // Reload just in case
         require('dotenv').config({ path: dotenvPath });
         return true;
     } catch (err) {
@@ -107,8 +109,7 @@ function createActivationWindow() {
 
 function getAppPath(relativeProd, relativeDev) {
     if (app.isPackaged) {
-        // Points to the ASAR-packed backend/frontend
-        return path.join(__dirname, relativeProd);
+        return path.join(process.resourcesPath, relativeProd);
     }
     return path.join(__dirname, '..', relativeDev || relativeProd);
 }
@@ -159,14 +160,20 @@ function startBackend() {
     console.log("🚀 Starting Inzeedo POS Backend...");
     const backendPath = getAppPath('backend/server.js');
 
+    const nodeModulesPath = app.isPackaged 
+        ? path.join(process.resourcesPath, 'app.asar/node_modules')
+        : path.join(__dirname, 'node_modules');
+
     backendProcess = fork(backendPath, [], {
         cwd: getAppPath('backend'),
         env: {
             ...process.env,
+            NODE_PATH: nodeModulesPath,
             NODE_ENV: 'production',
             ELECTRON_RUNNING: 'true',
             APP_PLATFORM: 'DESKTOP',
-            LOG_DIR: path.join(app.getPath('userData'), 'logs')
+            LOG_DIR: path.join(app.getPath('userData'), 'logs'),
+            UPLOAD_PATH: path.join(app.getPath('userData'), 'uploads')
         },
         silent: false
     });
@@ -262,10 +269,21 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
         const bootstrapPath = getAppPath('backend/scripts/bootstrap-db.js');
         console.log('🌱 Running Bootstrap Setup:', bootstrapPath);
         
+        const nodeModulesPath = app.isPackaged 
+            ? path.join(process.resourcesPath, 'app.asar/node_modules')
+            : path.join(__dirname, 'node_modules');
+
         return new Promise((resolve) => {
-            const child = fork(bootstrapPath, ['--clear'], {
+            // Removed '--clear' to prevent database reset as requested
+            const child = fork(bootstrapPath, [], {
                 cwd: getAppPath('backend'),
-                env: { ...process.env, APP_PLATFORM: 'DESKTOP' }
+                env: { 
+                    ...process.env, 
+                    NODE_PATH: nodeModulesPath,
+                    APP_PLATFORM: 'DESKTOP',
+                    LOG_DIR: path.join(app.getPath('userData'), 'logs'),
+                    UPLOAD_PATH: path.join(app.getPath('userData'), 'uploads')
+                }
             });
 
             child.on('exit', (code) => {
@@ -282,21 +300,30 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
 });
 
 ipcMain.on('activation-complete', async () => {
-    if (activationWindow) {
-        activationWindow.close();
-        activationWindow = null;
-    }
-    if (dbSetupWindow) {
-        dbSetupWindow.close();
-        dbSetupWindow = null;
-    }
-
+    // Check DB first to avoid a moment with no windows open
     const dbOk = await checkDbConfigured();
+    
+    // Store references to old windows before creating new ones
+    const oldActivationWindow = activationWindow;
+    const oldDbSetupWindow = dbSetupWindow;
+
+    // Clear globals so they don't get accidentally closed if we just recreated them
+    activationWindow = null;
+    dbSetupWindow = null;
+    
     if (!dbOk) {
         createDbSetupWindow();
     } else {
         startBackend();
         createWindow();
+    }
+
+    // Close the old windows only after the next window is initiated
+    if (oldActivationWindow) {
+        oldActivationWindow.close();
+    }
+    if (oldDbSetupWindow) {
+        oldDbSetupWindow.close();
     }
 });
 
