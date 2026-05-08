@@ -20,13 +20,8 @@ class LicensingService {
         this.userDataPath = app.getPath('userData');
         this.licensePath = path.join(this.userDataPath, 'license.dat');
 
-        // Load actual public key from file if it exists, otherwise use placeholder
-        const keyPath = path.join(__dirname, 'keys/public_key.pem');
-        if (fs.existsSync(keyPath)) {
-            this.publicKeyPem = fs.readFileSync(keyPath, 'utf8').replace(/\r/g, '').trim();
-        } else {
-            this.publicKeyPem = PUBLIC_KEY_PEM.trim();
-        }
+        // Use the hardcoded public key to verify against the production license server
+        this.publicKeyPem = PUBLIC_KEY_PEM.trim();
     }
 
     /**
