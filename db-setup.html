@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Setup - Inzeedo POS</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            margin-bottom: 0.4rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.65rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: none;
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.secondary {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button.secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            min-height: 1.2rem;
+        }
+
+        .error { color: #f87171; }
+        .success { color: #4ade80; }
+        .loading { color: #60a5fa; }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .step {
+            width: 2rem;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .step.active {
+            background: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="setup-container">
+        <h1>Database Setup</h1>
+        <p id="description">Inzeedo POS requires a local MySQL server. If you haven't installed one yet, please click the download button below first.</p>
+        
+        <div id="mysql-download" style="margin-bottom: 2rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem; border: 1px dashed var(--primary);">
+            <p style="margin-bottom: 1rem; color: var(--text); font-weight: 500;">Missing MySQL Server?</p>
+            <button onclick="window.api.send('open-external', 'https://dev.mysql.com/downloads/installer/')" class="secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem;">
+                Download MySQL Installer
+            </button>
+            <p style="font-size: 0.7rem; margin-top: 0.5rem;">Tip: Use 'root' as username and remember your password.</p>
+        </div>
+
+        <div id="step-1">
+            <div class="input-grid">
+                <div class="input-group full-width">
+                    <label for="dbHost">Host</label>
+                    <input type="text" id="dbHost" value="127.0.0.1">
+                </div>
+                <div class="input-group">
+                    <label for="dbPort">Port</label>
+                    <input type="number" id="dbPort" value="3306">
+                </div>
+                <div class="input-group">
+                    <label for="dbName">Database Name</label>
+                    <input type="text" id="dbName" value="pos_system">
+                </div>
+                <div class="input-group">
+                    <label for="dbUser">Username</label>
+                    <input type="text" id="dbUser" value="root">
+                </div>
+                <div class="input-group">
+                    <label for="dbPassword">Password</label>
+                    <input type="password" id="dbPassword" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="testBtn" class="secondary">Test Connection</button>
+                <button id="finishBtn">Finish Setup</button>
+            </div>
+        </div>
+        
+        <div id="status" class="status"></div>
+
+        <div class="steps">
+            <div class="step active"></div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const { api } = window;
+            
+            const testBtn = document.getElementById('testBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            const statusDiv = document.getElementById('status');
+
+            // Form Fields
+            const fields = {
+                host: document.getElementById('dbHost'),
+                port: document.getElementById('dbPort'),
+                name: document.getElementById('dbName'),
+                user: document.getElementById('dbUser'),
+                pass: document.getElementById('dbPassword')
+            };
+
+            testBtn.addEventListener('click', async () => {
+                const config = {
+                    host: fields.host.value,
+                    port: fields.port.value,
+                    user: fields.user.value,
+                    password: fields.pass.value
+                };
+
+                setLoading(true, 'test');
+                showStatus('Testing connection...', 'loading');
+
+                try {
+                    const result = await api.testDbConnection(config);
+                    if (result.success) {
+                        showStatus('Connection successful!', 'success');
+                    } else {
+                        showStatus(result.message || 'Connection failed.', 'error');
+                    }
+                } catch (err) {
+                    showStatus('Connection failed. Is MySQL running?', 'error');
+                } finally {
+                    setLoading(false, 'test');
+                }
+            });
+
+            finishBtn.addEventListener('click', async () => {
+                const data = {
+                    db: {
+                        host: fields.host.value,
+                        port: fields.port.value,
+                        name: fields.name.value,
+                        user: fields.user.value,
+                        pass: fields.pass.value
+                    }
+                };
+
+                setLoading(true, 'finish');
+                showStatus('Initializing Database (This may take a moment)...', 'loading');
+
+                try {
+                    const result = await api.runSetupWizard(data);
+                    if (result.success) {
+                        showStatus('Setup complete! System is ready.', 'success');
+                        setTimeout(() => {
+                            api.send('activation-complete');
+                        }, 2000);
+                    } else {
+                        showStatus(result.message || 'Setup failed.', 'error');
+                        setLoading(false, 'finish');
+                    }
+                } catch (err) {
+                    showStatus('Critical error during setup.', 'error');
+                    setLoading(false, 'finish');
+                }
+            });
+
+            function showStatus(msg, type) {
+                statusDiv.textContent = msg;
+                statusDiv.className = 'status ' + type;
+            }
+
+            function setLoading(loading, type) {
+                testBtn.disabled = loading;
+                finishBtn.disabled = loading;
+                
+                if (type === 'test') {
+                    testBtn.textContent = loading ? 'Testing...' : 'Test Connection';
+                } else if (type === 'finish') {
+                    finishBtn.textContent = loading ? 'Setting up...' : 'Finish Setup';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

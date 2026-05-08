@@ -1,0 +1,47 @@
+appId: com.inzeedo.pos
+productName: Inzeedo POS
+copyright: Copyright © 2026 Inzeedo
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - main.js
+  - preload.js
+  - licensing-service.js
+  - activation.html
+  - db-setup.html
+  - package.json
+  - node_modules/**
+  - assets/**
+  - keys/**
+  - from: ../backend
+    to: backend
+    filter:
+      - "src/**"
+      - "server.js"
+      - "package.json"
+      - "scripts/**"
+      - ".env.example"
+      - "!.git/**"
+      - "!node_modules/**"
+      - "!dist/**"
+      - "!logs/**"
+  - from: ../electron-desktop/out
+    to: frontend
+
+win:
+  target: nsis
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: Inzeedo POS
+  createDesktopShortcut: true
+
+
+asar: true
+asarUnpack:
+  - node_modules/node-machine-id/**
