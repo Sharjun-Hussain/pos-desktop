@@ -2,6 +2,14 @@ appId: com.inzeedo.pos
 productName: Inzeedo POS
 copyright: Copyright © 2026 Inzeedo
 
+releaseInfo:
+  releaseNotes: |
+    v1.0.1
+    - Unified Setup Wizard: Combined activation and database setup into a single modern wizard
+    - Silent Printing: Native OS printer support for receipts and barcode labels without print dialogs
+    - Hardware ID Fix: Consistent device fingerprinting across dev and production environments
+    - Stability: Improved app launch reliability on Ubuntu/Wayland systems
+
 directories:
   output: dist
   buildResources: assets

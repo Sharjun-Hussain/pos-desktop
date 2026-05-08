@@ -1,6 +1,6 @@
 {
   "name": "inzeedo-pos-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Industrial POS Desktop Application",
   "main": "main.js",
   "scripts": {
