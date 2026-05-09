@@ -4,6 +4,13 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.0
+    - Organization Admin Controls: Introduced "Reset Admin Password" for Super Admins.
+    - Standardized Naming: Renamed "Suppliers" to "Vendor Registry" and "Branch Hierarchy" to "Branch Registry".
+    - Security Fixes: Resolved 403 Forbidden errors during login for active organizations.
+    - API Optimization: Migrated administrative actions to the PATCH method for better consistency.
+    - Improved Metadata: Updated version across all core components to 1.1.0.
+
     v1.0.2
     - Layout Fixes: Resolved double-scrollbar issue on the main POS terminal screen.
     - Fullscreen Optimization: The POS terminal now correctly scales to edge-to-edge without sidebar interference.
