@@ -278,7 +278,7 @@ ipcMain.handle('print-silent', async (event, { html, printerName, options = {} }
 
 ipcMain.handle('run-setup-wizard', async (event, data) => {
     try {
-        // 1. Update .env
+        // 1. Update .env with the new DB credentials
         updateEnv({
             DB_HOST: data.db.host,
             DB_PORT: data.db.port,
@@ -287,20 +287,38 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
             DB_PASSWORD: data.db.pass
         });
 
-        // 2. Run Bootstrap Script
+        // 2. Pre-check: Try to connect and create the database if it doesn't exist
+        try {
+            const preConn = await mysql.createConnection({
+                host: data.db.host,
+                port: data.db.port,
+                user: data.db.user,
+                password: data.db.pass
+            });
+            await preConn.query(`CREATE DATABASE IF NOT EXISTS \`${data.db.name}\``);
+            await preConn.end();
+            console.log(`✅ Database "${data.db.name}" verified/created on ${data.db.host}`);
+        } catch (preErr) {
+            console.error('❌ Pre-connection failed:', preErr.message);
+            return { success: false, message: `Cannot connect to MySQL: ${preErr.message}` };
+        }
+
+        // 3. Run Bootstrap Script — capture stdout/stderr to surface real errors
         const bootstrapPath = getAppPath('backend/scripts/bootstrap-db.js');
         console.log('🌱 Running Bootstrap Setup:', bootstrapPath);
-        
-        const nodeModulesPath = app.isPackaged 
+
+        const nodeModulesPath = app.isPackaged
             ? path.join(process.resourcesPath, 'app.asar/node_modules')
             : path.join(__dirname, 'node_modules');
 
         return new Promise((resolve) => {
-            // Removed '--clear' to prevent database reset as requested
+            let errorOutput = '';
+
             const child = fork(bootstrapPath, [], {
                 cwd: getAppPath('backend'),
-                env: { 
-                    ...process.env, 
+                silent: true,   // ← capture stdio so we can read the real error
+                env: {
+                    ...process.env,
                     NODE_PATH: nodeModulesPath,
                     APP_PLATFORM: 'DESKTOP',
                     LOG_DIR: path.join(app.getPath('userData'), 'logs'),
@@ -308,11 +326,32 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
                 }
             });
 
+            // Pipe child stdout to parent console so we still see logs
+            child.stdout.on('data', (data) => {
+                const msg = data.toString();
+                process.stdout.write(msg);
+            });
+
+            // Capture stderr to show real errors in the UI
+            child.stderr.on('data', (data) => {
+                const msg = data.toString();
+                process.stderr.write(msg);
+                errorOutput += msg;
+            });
+
             child.on('exit', (code) => {
                 if (code === 0) {
                     resolve({ success: true });
                 } else {
-                    resolve({ success: false, message: `Setup failed with code ${code}` });
+                    // Extract the most useful part of the error for display
+                    const shortError = errorOutput
+                        .split('\n')
+                        .find(l => l.includes('Error') || l.includes('error') || l.includes('denied') || l.includes('ECONNREFUSED'))
+                        || errorOutput.slice(0, 300)
+                        || `Bootstrap failed (exit code ${code})`;
+
+                    console.error('❌ Bootstrap error output:', errorOutput);
+                    resolve({ success: false, message: shortError.trim() });
                 }
             });
         });
