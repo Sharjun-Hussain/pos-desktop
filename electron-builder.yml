@@ -4,6 +4,11 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.2
+    - UI Standardisation: Renamed insights to Stock and Advanced Reports.
+    - Improved UX: Standardized Supplier management with clean shadcn design.
+    - Usability: Enhanced bulk action logic to prevent invalid interactions.
+
     v1.1.1
     - Authentication & Parity: Resolved authentication session hydration issues and improved consistency between web and desktop session guards.
 
