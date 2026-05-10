@@ -300,13 +300,7 @@
                 <input type="text" id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family: monospace; letter-spacing: 2px;">
             </div>
 
-            <div class="hwid-box">
-                <i class="fas fa-fingerprint"></i>
-                <div>
-                    <div class="hwid-label">Hardware Fingerprint</div>
-                    <div class="hwid-value" id="hwidDisplay">Detecting hardware ID...</div>
-                </div>
-            </div>
+
 
             <button class="btn-primary" id="activateBtn">
                 <span>Activate &amp; Continue</span>
@@ -374,12 +368,7 @@
 </div><!-- /wizard -->
 
 <script>
-    // ─── HWID ─────────────────────────────────────────────────────
-    window.api.getHWID().then(function(id) {
-        document.getElementById('hwidDisplay').innerText = id;
-    }).catch(function() {
-        document.getElementById('hwidDisplay').innerText = 'Unable to detect';
-    });
+
 
     // ─── PROGRESS ─────────────────────────────────────────────────
     function goToStep(n) {
