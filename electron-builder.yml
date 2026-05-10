@@ -4,6 +4,12 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.6
+    - Procurement Automation: Refactored Purchase Return workflow with automated PO/GRN integration and data population.
+    - Financial Reporting: Integrated high-fidelity Print Preview functionality for Trial Balance, Profit & Loss, and Balance Sheet reports.
+    - Theme Standardisation: Enhanced Dark/Light mode support for Expense Category creation and Cheque recording interfaces.
+    - UX Refinement: Standardized action buttons and optimized navigation flows across core procurement modules.
+
     v1.1.5
     - UI Parity: Standardized Settings interface across Web and Desktop with the new 'Floating Action Hub'.
     - Design System: Enhanced Dark Mode styling for Organization settings and standardized input field aesthetics.
