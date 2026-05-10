@@ -4,6 +4,10 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.3
+    - Stability: Resolved a critical issue where the Master Service Agreement (Terms) dialog failed to close after acceptance.
+    - Privacy: Enhanced security by hiding the Hardware Fingerprint from the Setup Wizard UI while maintaining internal device activation integrity.
+
     v1.1.2
     - UI Standardisation: Renamed insights to Stock and Advanced Reports.
     - Improved UX: Standardized Supplier management with clean shadcn design.
