@@ -4,6 +4,11 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.5
+    - UI Parity: Standardized Settings interface across Web and Desktop with the new 'Floating Action Hub'.
+    - Design System: Enhanced Dark Mode styling for Organization settings and standardized input field aesthetics.
+    - Security Gating: Enforced stricter RBAC (Role-Based Access Control) for administrative settings updates.
+
     v1.1.4
     - Offline Stability: Decoupled core POS operations from internet dependency for air-gapped stability.
     - Structural Integrity: Resolved application crashes in Organization Edit workflow and implemented safe date parsing.
