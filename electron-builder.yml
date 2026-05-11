@@ -4,6 +4,12 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.7
+    - Navigation Stability: Resolved application crashes during "Back" button navigation by implementing hierarchical route parsing.
+    - Data Integrity: Fixed critical JavaScript exceptions (ReferenceError) in Purchase Order detail views during attachment management.
+    - Reporting Excellence: Verified and standardized Main/Sub Category Sales reports with audited revenue share calculations and export capabilities.
+    - Dark Mode Support: Expanded full dark theme compatibility to Profit & Loss and Employee Performance reporting interfaces.
+    - Logo Management: Stabilized organization logo uploads with robust error handling and file system validation.
     v1.1.6
     - Procurement Automation: Refactored Purchase Return workflow with automated PO/GRN integration and data population.
     - Financial Reporting: Integrated high-fidelity Print Preview functionality for Trial Balance, Profit & Loss, and Balance Sheet reports.
