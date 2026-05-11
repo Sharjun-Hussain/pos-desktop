@@ -4,6 +4,15 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.1.9
+    - Multi-Window Stability: Resolved "Broken Window" issue by implementing root-based initialization with auth-gated internal redirects.
+    - Asset Integrity: Fixed relative path resolutions for JS/CSS in new windows within static production environments.
+    - Navigation Intelligence: Enhanced initial route detection via secure 'initRoute' parameters.
+    v1.1.8
+    - Multi-Window Support: Implemented native context-menu "Open in New Window" for enhanced multi-tasking across all application modules.
+    - Session Synchronization: Optimized multi-window session persistence using dedicated partitions for real-time authentication state sharing.
+    - Advanced Navigation: Refactored back-button logic with hierarchical awareness to prevent crashes during record editing and detail view transitions.
+    - UX Refinement: Standardized context menu actions (Copy/Paste/Select All) for a more native desktop experience.
     v1.1.7
     - Navigation Stability: Resolved application crashes during "Back" button navigation by implementing hierarchical route parsing.
     - Data Integrity: Fixed critical JavaScript exceptions (ReferenceError) in Purchase Order detail views during attachment management.

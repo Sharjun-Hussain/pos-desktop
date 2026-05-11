@@ -16,9 +16,11 @@ contextBridge.exposeInMainWorld(
         getPrinters: () => ipcRenderer.invoke('get-printers'),
         printSilent: (data) => ipcRenderer.invoke('print-silent', data),
         
+        openNewWindow: (url) => ipcRenderer.send('open-new-window', url),
+        
         // Generic channels
         send: (channel, data) => {
-            let validChannels = ["toMain", "activation-complete", "open-external", "exit-app"];
+            let validChannels = ["toMain", "activation-complete", "open-external", "exit-app", "open-new-window"];
             if (validChannels.includes(channel)) {
                 ipcRenderer.send(channel, data);
             }

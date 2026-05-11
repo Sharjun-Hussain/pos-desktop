@@ -29,7 +29,7 @@ require('dotenv').config({ path: dotenvPath });
 const licensingService = require('./licensing-service');
 
 let setupWindow;
-let mainWindow;
+let windows = new Set();
 let backendProcess;
 
 function createSetupWindow() {
@@ -95,8 +95,6 @@ function updateEnv(updates) {
     }
 }
 
-
-
 function getAppPath(relativeProd, relativeDev) {
     if (app.isPackaged) {
         return path.join(process.resourcesPath, relativeProd);
@@ -104,15 +102,18 @@ function getAppPath(relativeProd, relativeDev) {
     return path.join(__dirname, '..', relativeDev || relativeProd);
 }
 
-function createWindow() {
+function createWindow(url = null) {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-
-    mainWindow = new BrowserWindow({
+    const isDev = !app.isPackaged || process.env.ELECTRON_IS_DEV === 'true';
+    const baseUrl = isDev ? 'http://localhost:3000' : 'http://localhost:5000';
+    
+    const win = new BrowserWindow({
         width: width,
         height: height,
         title: "Inzeedo POS - Desktop Edition",
-        show: false, // Start hidden and show once ready
+        show: false,
         webPreferences: {
+            partition: 'persist:inzeedo',
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js')
@@ -120,30 +121,78 @@ function createWindow() {
         icon: path.join(__dirname, 'assets/icon.png')
     });
 
-    mainWindow.setMenuBarVisibility(false);
+    win.setMenuBarVisibility(false);
 
-    // For testing/dev, use Port 3000 (Next.js). For production, use Port 5000 (Backend).
-    const isDev = !app.isPackaged || process.env.ELECTRON_IS_DEV === 'true';
-    const frontendUrl = isDev ? 'http://localhost:3000' : 'http://localhost:5000';
-    
-    console.log(`🌐 Loading Frontend from: ${frontendUrl} (Mode: ${isDev ? 'Dev' : 'Prod'})`);
-    
     const loadWithRetry = () => {
-        mainWindow.loadURL(frontendUrl).then(() => {
-            mainWindow.maximize();
-            mainWindow.show();
-            mainWindow.focus();
-        }).catch(() => {
+        // If a specific URL is provided, we still load the BASE URL first to ensure
+        // that all static assets (JS/CSS) load correctly from the root path.
+        // We pass the target route as a query parameter.
+        let finalUrl = baseUrl;
+        if (url && url !== baseUrl) {
+            try {
+                const urlObj = new URL(url);
+                const route = urlObj.pathname + urlObj.search + urlObj.hash;
+                const baseObj = new URL(baseUrl);
+                baseObj.searchParams.set('initRoute', route);
+                finalUrl = baseObj.toString();
+            } catch (e) {
+                console.error("Failed to parse initRoute:", e);
+                finalUrl = url; // Fallback to raw URL
+            }
+        }
+
+        win.loadURL(finalUrl).catch(() => {
             console.log('⏳ Backend not ready, retrying in 500ms...');
             setTimeout(loadWithRetry, 500);
         });
     };
 
+    win.once('ready-to-show', () => {
+        if (!url) win.maximize();
+        win.show();
+        win.focus();
+    });
+
     loadWithRetry();
 
-    mainWindow.on('closed', function () {
-        mainWindow = null;
+    // Context Menu Implementation
+    win.webContents.on('context-menu', (event, params) => {
+        const { Menu, MenuItem } = require('electron');
+        const menu = new Menu();
+
+        if (params.linkURL) {
+            menu.append(new MenuItem({
+                label: 'Open in New Window',
+                click: () => {
+                    const isDev = !app.isPackaged || process.env.ELECTRON_IS_DEV === 'true';
+                    const baseUrl = isDev ? 'http://localhost:3000' : 'http://localhost:5000';
+                    
+                    if (params.linkURL.startsWith(baseUrl) || params.linkURL.startsWith('http://localhost') || params.linkURL.startsWith('http://127.0.0.1')) {
+                        createWindow(params.linkURL);
+                    } else {
+                        shell.openExternal(params.linkURL);
+                    }
+                }
+            }));
+            menu.append(new MenuItem({ type: 'separator' }));
+        }
+
+        if (params.editFlags.canCopy) menu.append(new MenuItem({ role: 'copy' }));
+        if (params.editFlags.canPaste) menu.append(new MenuItem({ role: 'paste' }));
+        if (params.editFlags.canCut) menu.append(new MenuItem({ role: 'cut' }));
+        if (params.editFlags.canSelectAll) menu.append(new MenuItem({ role: 'selectAll' }));
+
+        if (menu.items.length > 0) {
+            menu.popup({ window: win });
+        }
     });
+
+    win.on('closed', function () {
+        windows.delete(win);
+    });
+
+    windows.add(win);
+    return win;
 }
 
 function startBackend() {
@@ -244,8 +293,8 @@ ipcMain.handle('test-db-connection', async (event, config) => {
     }
 });
 
-ipcMain.handle('get-printers', async () => {
-    return await mainWindow.webContents.getPrintersAsync();
+ipcMain.handle('get-printers', async (event) => {
+    return await event.sender.getPrintersAsync();
 });
 
 ipcMain.handle('print-silent', async (event, { html, printerName, options = {} }) => {
@@ -387,6 +436,10 @@ ipcMain.on('open-external', (event, url) => {
     shell.openExternal(url);
 });
 
+ipcMain.on('open-new-window', (event, url) => {
+    createWindow(url);
+});
+
 ipcMain.on('exit-app', () => {
     app.quit();
 });
@@ -411,7 +464,7 @@ app.whenReady().then(async () => {
     }
 
     app.on('activate', async function () {
-        if (BrowserWindow.getAllWindows().length === 0) {
+        if (windows.size === 0) {
             const check = licensingService.verifyLicense();
             if (check.valid) {
                 const dbOk = await checkDbConfigured();
