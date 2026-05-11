@@ -4,6 +4,10 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.2.1
+    - Data Maintenance: Resolved SQL snapshot generation failure by implementing automated directory initialization and path sanitization.
+    - Security: Hardened shell command execution for database backups with credential quoting and enhanced error diagnostics.
+    - System Health: Improved database restoration reliability for large-scale structural snapshots.
     v1.2.0
     - Major Feature: Full Multi-Window Support with native "Open in New Window" context menu functionality.
     - Navigation Architecture: Implemented root-based window initialization with client-side route hydration to ensure asset integrity.
