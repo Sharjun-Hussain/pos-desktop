@@ -4,62 +4,65 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
-    v1.2.1
+    v1.2.2 (May 08, 2026)
+    - Catalog Management: Fixed measurement units creation failure by resolving field naming mismatch between frontend and backend.
+    - UX Stability: Synchronized short code/name validation to ensure consistent unit registration.
+    v1.2.1 (May 07, 2026)
     - Data Maintenance: Resolved SQL snapshot generation failure by implementing automated directory initialization and path sanitization.
     - Security: Hardened shell command execution for database backups with credential quoting and enhanced error diagnostics.
     - System Health: Improved database restoration reliability for large-scale structural snapshots.
-    v1.2.0
+    v1.2.0 (May 06, 2026)
     - Major Feature: Full Multi-Window Support with native "Open in New Window" context menu functionality.
     - Navigation Architecture: Implemented root-based window initialization with client-side route hydration to ensure asset integrity.
     - Session Continuity: Synchronized authentication state across all independent windows via shared persistent partitions.
     - UI Stability: Refactored back-button logic with hierarchical module awareness to prevent application crashes during deep navigation.
-    v1.1.8
+    v1.1.8 (May 04, 2026)
     - Multi-Window Support: Implemented native context-menu "Open in New Window" for enhanced multi-tasking across all application modules.
     - Session Synchronization: Optimized multi-window session persistence using dedicated partitions for real-time authentication state sharing.
     - Advanced Navigation: Refactored back-button logic with hierarchical awareness to prevent crashes during record editing and detail view transitions.
     - UX Refinement: Standardized context menu actions (Copy/Paste/Select All) for a more native desktop experience.
-    v1.1.7
+    v1.1.7 (May 02, 2026)
     - Navigation Stability: Resolved application crashes during "Back" button navigation by implementing hierarchical route parsing.
     - Data Integrity: Fixed critical JavaScript exceptions (ReferenceError) in Purchase Order detail views during attachment management.
     - Reporting Excellence: Verified and standardized Main/Sub Category Sales reports with audited revenue share calculations and export capabilities.
     - Dark Mode Support: Expanded full dark theme compatibility to Profit & Loss and Employee Performance reporting interfaces.
     - Logo Management: Stabilized organization logo uploads with robust error handling and file system validation.
-    v1.1.6
+    v1.1.6 (May 01, 2026)
     - Procurement Automation: Refactored Purchase Return workflow with automated PO/GRN integration and data population.
     - Financial Reporting: Integrated high-fidelity Print Preview functionality for Trial Balance, Profit & Loss, and Balance Sheet reports.
     - Theme Standardisation: Enhanced Dark/Light mode support for Expense Category creation and Cheque recording interfaces.
     - UX Refinement: Standardized action buttons and optimized navigation flows across core procurement modules.
 
-    v1.1.5
+    v1.1.5 (April 30, 2026)
     - UI Parity: Standardized Settings interface across Web and Desktop with the new 'Floating Action Hub'.
     - Design System: Enhanced Dark Mode styling for Organization settings and standardized input field aesthetics.
     - Security Gating: Enforced stricter RBAC (Role-Based Access Control) for administrative settings updates.
 
-    v1.1.4
+    v1.1.4 (April 28, 2026)
     - Offline Stability: Decoupled core POS operations from internet dependency for air-gapped stability.
     - Structural Integrity: Resolved application crashes in Organization Edit workflow and implemented safe date parsing.
     - UI Refinement: Standardized 'Export Actions' (Excel/CSV) across Inventory Catalog and Units Registry.
 
-    v1.1.3
+    v1.1.3 (April 27, 2026)
     - Stability: Resolved a critical issue where the Master Service Agreement (Terms) dialog failed to close after acceptance.
     - Privacy: Enhanced security by hiding the Hardware Fingerprint from the Setup Wizard UI while maintaining internal device activation integrity.
 
-    v1.1.2
+    v1.1.2 (April 25, 2026)
     - UI Standardisation: Renamed insights to Stock and Advanced Reports.
     - Improved UX: Standardized Supplier management with clean shadcn design.
     - Usability: Enhanced bulk action logic to prevent invalid interactions.
 
-    v1.1.1
+    v1.1.1 (April 22, 2026)
     - Authentication & Parity: Resolved authentication session hydration issues and improved consistency between web and desktop session guards.
 
-    v1.1.0
+    v1.1.0 (April 20, 2026)
     - Organization Admin Controls: Introduced "Reset Admin Password" for Super Admins.
     - Standardized Naming: Renamed "Suppliers" to "Vendor Registry" and "Branch Hierarchy" to "Branch Registry".
     - Security Fixes: Resolved 403 Forbidden errors during login for active organizations.
     - API Optimization: Migrated administrative actions to the PATCH method for better consistency.
     - Improved Metadata: Updated version across all core components to 1.1.0.
 
-    v1.0.2
+    v1.0.2 (April 18, 2026)
     - Layout Fixes: Resolved double-scrollbar issue on the main POS terminal screen.
     - Fullscreen Optimization: The POS terminal now correctly scales to edge-to-edge without sidebar interference.
     - Unified Setup Wizard: Combined activation and database setup into a single modern wizard.
