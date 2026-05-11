@@ -94,7 +94,7 @@ class LicensingService {
      *    Remember to set it back to false before building for release!
      */
     getSyncStatus() {
-        const TEST_FORCE_SYNC = true; // ← set to true to test the sync popup
+        const TEST_FORCE_SYNC = false; // ← set to true to test the sync popup
 
         const check = this.verifyLicense();
         if (!check.valid) return { needsSync: true, daysSinceSync: 999 };
