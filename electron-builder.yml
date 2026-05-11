@@ -4,10 +4,11 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
-    v1.1.9
-    - Multi-Window Stability: Resolved "Broken Window" issue by implementing root-based initialization with auth-gated internal redirects.
-    - Asset Integrity: Fixed relative path resolutions for JS/CSS in new windows within static production environments.
-    - Navigation Intelligence: Enhanced initial route detection via secure 'initRoute' parameters.
+    v1.2.0
+    - Major Feature: Full Multi-Window Support with native "Open in New Window" context menu functionality.
+    - Navigation Architecture: Implemented root-based window initialization with client-side route hydration to ensure asset integrity.
+    - Session Continuity: Synchronized authentication state across all independent windows via shared persistent partitions.
+    - UI Stability: Refactored back-button logic with hierarchical module awareness to prevent application crashes during deep navigation.
     v1.1.8
     - Multi-Window Support: Implemented native context-menu "Open in New Window" for enhanced multi-tasking across all application modules.
     - Session Synchronization: Optimized multi-window session persistence using dedicated partitions for real-time authentication state sharing.
