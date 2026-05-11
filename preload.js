@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld(
         // Database Setup
         testDbConnection: (config) => ipcRenderer.invoke('test-db-connection', config),
         runSetupWizard: (data) => ipcRenderer.invoke('run-setup-wizard', data),
+        syncLicense: () => ipcRenderer.invoke('sync-license'),
         
         // Printing
         getPrinters: () => ipcRenderer.invoke('get-printers'),

@@ -396,6 +396,155 @@
         .step.active {
             display: flex;
         }
+
+        /* ─── SYNC OVERLAY ───────────────────────────────── */
+        .sync-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .sync-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .sync-card {
+            width: 440px;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            padding: 44px 40px;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+            animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .sync-icon-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid rgba(245, 158, 11, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            animation: pulse-amber 2.4s infinite;
+        }
+
+        @keyframes pulse-amber {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+            50%       { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+        }
+
+        .sync-icon-ring i {
+            font-size: 32px;
+            color: #f59e0b;
+        }
+
+        .sync-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 10px;
+        }
+
+        .sync-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.7;
+            margin-bottom: 8px;
+        }
+
+        .sync-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #f59e0b;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 28px;
+        }
+
+        .sync-btn-retry {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .sync-btn-retry:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(245, 158, 11, 0.35);
+        }
+
+        .sync-btn-retry:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .sync-btn-exit {
+            width: 100%;
+            padding: 11px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sync-btn-exit:hover {
+            background: rgba(239, 68, 68, 0.08);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .sync-status {
+            font-size: 12px;
+            text-align: center;
+            min-height: 18px;
+            margin-top: 12px;
+            color: #60a5fa;
+        }
+
+        .sync-status.success { color: #10b981; }
+        .sync-status.error   { color: #f87171; }
     </style>
 </head>
 
@@ -508,6 +657,33 @@
         </div><!-- /right-panel -->
     </div><!-- /wizard -->
 
+    <!-- ─── 30-DAY LICENSE SYNC OVERLAY ─────────────────── -->
+    <div class="sync-overlay" id="syncOverlay">
+        <div class="sync-card">
+            <div class="sync-icon-ring">
+                <i class="fas fa-wifi"></i>
+            </div>
+            <div class="sync-title">Internet Required</div>
+            <p class="sync-subtitle">
+                Your license hasn't been verified online in over <strong style="color:#f8fafc;">30 days</strong>.
+                Please connect to the internet so Inzeedo POS can validate your subscription.
+            </p>
+            <div class="sync-badge">
+                <i class="fas fa-shield-halved"></i>
+                Mandatory 30-Day Verification
+            </div>
+            <button class="sync-btn-retry" id="syncRetryBtn">
+                <i class="fas fa-rotate-right"></i>
+                <span>Retry Verification</span>
+            </button>
+            <button class="sync-btn-exit" onclick="window.api.exitApp()">
+                <i class="fas fa-power-off" style="margin-right:6px;"></i>
+                Exit Application
+            </button>
+            <div class="sync-status" id="syncStatusText"></div>
+        </div>
+    </div>
+
     <script>
 
 
@@ -611,6 +787,48 @@
                 btn.innerHTML = html;
             }
         }
+
+        // ─── 30-DAY SYNC MODE DETECTION ───────────────────────────────
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('mode') === 'sync') {
+                document.getElementById('syncOverlay').classList.add('active');
+                // Hide the main wizard form so it doesn't show behind the sync card
+                document.querySelector('.wizard').style.display = 'none';
+            }
+        })();
+
+        document.getElementById('syncRetryBtn').addEventListener('click', async function () {
+            var btn = document.getElementById('syncRetryBtn');
+            var statusEl = document.getElementById('syncStatusText');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> &nbsp;Verifying...';
+            statusEl.className = 'sync-status';
+            statusEl.innerText = 'Contacting license server...';
+
+            try {
+                var result = await window.api.syncLicense();
+                if (result.success) {
+                    statusEl.className = 'sync-status success';
+                    statusEl.innerText = '✅ License verified successfully! Launching...';
+                    btn.innerHTML = '<i class="fas fa-check"></i> <span>Verified!</span>';
+                    setTimeout(function () {
+                        window.api.send('activation-complete');
+                    }, 1500);
+                } else {
+                    statusEl.className = 'sync-status error';
+                    statusEl.innerText = '❌ Could not reach server. Please check your internet connection.';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rotate-right"></i><span>Retry Verification</span>';
+                }
+            } catch (e) {
+                statusEl.className = 'sync-status error';
+                statusEl.innerText = '❌ Verification failed. Please check your connection.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rotate-right"></i> <span>Retry Verification</span>';
+            }
+        });
     </script>
 </body>
 

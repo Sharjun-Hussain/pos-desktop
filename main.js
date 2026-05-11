@@ -32,7 +32,7 @@ let setupWindow;
 let windows = new Set();
 let backendProcess;
 
-function createSetupWindow() {
+function createSetupWindow(mode = null) {
     setupWindow = new BrowserWindow({
         width: 900,
         height: 600,
@@ -48,7 +48,10 @@ function createSetupWindow() {
         }
     });
 
-    setupWindow.loadFile('setup-wizard.html');
+    // Use loadFile (safe for both dev & packaged builds).
+    // Pass an optional query param to activate a specific mode in the UI.
+    const loadOptions = mode ? { query: { mode } } : {};
+    setupWindow.loadFile('setup-wizard.html', loadOptions);
     setupWindow.once('ready-to-show', () => {
         setupWindow.show();
         setupWindow.focus();
@@ -278,6 +281,14 @@ ipcMain.handle('activate-license', async (event, licenseKey) => {
     });
 });
 
+ipcMain.handle('sync-license', async () => {
+    console.log('🔄 IPC Request: sync-license');
+    // Use the boolean return value directly — avoids TEST_FORCE_SYNC interference
+    const synced = await licensingService.syncWithServer();
+    console.log('🔄 Sync result:', synced ? 'SUCCESS' : 'FAILED');
+    return { success: synced };
+});
+
 ipcMain.handle('test-db-connection', async (event, config) => {
     try {
         const connection = await mysql.createConnection({
@@ -450,6 +461,25 @@ app.whenReady().then(async () => {
 
     if (check.valid) {
         console.log('✅ License Verified for HWID:', check.data.hwid);
+        
+        // 30-Day Mandatory Sync Check
+        const syncStatus = licensingService.getSyncStatus();
+        if (syncStatus.needsSync) {
+            console.log(`⚠️ License sync required (${syncStatus.daysSinceSync} days since last check)`);
+            
+            // Try to sync silently first
+            await licensingService.syncWithServer();
+            const afterSyncStatus = licensingService.getSyncStatus();
+            
+            if (afterSyncStatus.needsSync) {
+                console.log('❌ Silent sync failed. Mandatory online check required.');
+                createSetupWindow('sync');
+                return;
+            } else {
+                console.log('✅ Background sync successful.');
+            }
+        }
+
         const dbOk = await checkDbConfigured();
         if (dbOk) {
             startBackend();

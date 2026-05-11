@@ -87,6 +87,36 @@ class LicensingService {
     }
 
     /**
+     * Checks if the license needs an online sync (every 30 days).
+     * Returns { needsSync: boolean, daysSinceSync: number }
+     *
+     * 🧪 TEST MODE: Set TEST_FORCE_SYNC = true to always trigger the sync check.
+     *    Remember to set it back to false before building for release!
+     */
+    getSyncStatus() {
+        const TEST_FORCE_SYNC = true; // ← set to true to test the sync popup
+
+        const check = this.verifyLicense();
+        if (!check.valid) return { needsSync: true, daysSinceSync: 999 };
+
+        if (TEST_FORCE_SYNC) {
+            console.log('🧪 TEST_FORCE_SYNC is ON — forcing 30-day sync check.');
+            return { needsSync: true, isExpired: false, daysSinceSync: 30 };
+        }
+
+        const issuedAt = new Date(check.data.issuedAt);
+        const now = new Date();
+        const diffTime = Math.abs(now - issuedAt);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return {
+            needsSync: diffDays >= 30,
+            isExpired: diffDays >= 32, // 2-day grace period before hard block
+            daysSinceSync: diffDays
+        };
+    }
+
+    /**
      * Saves a new license certificate.
      */
     saveLicense(signedPayload) {
@@ -100,9 +130,10 @@ class LicensingService {
     }
     /**
      * Periodically syncs with the server to check for subscription renewals.
+     * Returns true if the server responded and the certificate was refreshed.
      */
     async syncWithServer() {
-        if (!fs.existsSync(this.licensePath)) return;
+        if (!fs.existsSync(this.licensePath)) return false;
 
         try {
             const licenseContent = fs.readFileSync(this.licensePath, 'utf8');
@@ -134,25 +165,32 @@ class LicensingService {
                             if (result.success) {
                                 this.saveLicense(result.certificate);
                                 console.log('🔄 License synced successfully via Native Net.');
+                                resolve(true);  // ← success
+                            } else {
+                                console.warn('⚠️ License sync: server rejected the request -', result.message);
+                                resolve(false); // ← server said no
                             }
-                            resolve();
-                        } catch (e) { resolve(); }
+                        } catch (e) {
+                            console.error('⚠️ License sync: bad JSON from server');
+                            resolve(false);
+                        }
                     });
                 });
 
-                request.on('error', () => {
-                    console.error('⚠️ License sync failed (Native Net Error)');
-                    resolve();
+                request.on('error', (err) => {
+                    console.error('⚠️ License sync failed (Network Error):', err.message);
+                    resolve(false); // ← network error
                 });
 
-                request.write(JSON.stringify({ 
-                    licenseKey: data.licenseKey, 
-                    hwid: data.hwid 
+                request.write(JSON.stringify({
+                    licenseKey: data.licenseKey,
+                    hwid: data.hwid
                 }));
                 request.end();
             });
         } catch (error) {
-            console.error('⚠️ License sync failed (Local Error)');
+            console.error('⚠️ License sync failed (Local Error):', error.message);
+            return false;
         }
     }
 }
