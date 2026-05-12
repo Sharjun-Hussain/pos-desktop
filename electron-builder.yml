@@ -4,6 +4,11 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.2.3 (May 12, 2026)
+    - UX Architecture: Unified Organization Creation & Configuration workflow, allowing full subscription setup in a single step.
+    - Session Stability: Implemented background token refresh for Desktop, ensuring seamless 30-day authenticated sessions.
+    - Security: Hardened RBAC by restricting Database Management to Super Admins and fixing Role permission persistence issues.
+    - Design: Reverted Login Logo to native img rendering for improved production asset reliability.
     v1.2.2 (May 08, 2026)
     - Catalog Management: Fixed measurement units creation failure by resolving field naming mismatch between frontend and backend.
     - UX Stability: Synchronized short code/name validation to ensure consistent unit registration.
