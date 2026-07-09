@@ -4,6 +4,10 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.2.4 (July 09, 2026)
+    - Routine stability updates and performance improvements for POS modules.
+    - Improved consistency of table numbers and item counts display.
+    - Fixed Yesterday sales filter and optimized backend data synchronization.
     v1.2.3 (May 12, 2026)
     - UX Architecture: Unified Organization Creation & Configuration workflow, allowing full subscription setup in a single step.
     - Session Stability: Implemented background token refresh for Desktop, ensuring seamless 30-day authenticated sessions.
@@ -90,7 +94,7 @@ files:
   - keys/**
 
 extraResources:
-  - from: ../backend
+  - from: ../point-of-sale-api-OLD
     to: backend
     filter:
       - "src/**"
