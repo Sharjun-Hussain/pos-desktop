@@ -4,6 +4,10 @@ copyright: Copyright © 2026 Inzeedo
 
 releaseInfo:
   releaseNotes: |
+    v1.2.5 (July 30, 2026)
+    - Feature: Added native 'Remember Me' credential saving logic to the Desktop Login terminal.
+    - Stability: Fixed critical white-screen loop on fresh installs by correctly initializing the desktop database credentials and dependencies.
+    - Data Processing: Embedded runtime storage modules (archiver-zip-encrypted, crypto-js) tightly into the app binary.
     v1.2.4 (July 09, 2026)
     - Routine stability updates and performance improvements for POS modules.
     - Improved consistency of table numbers and item counts display.
