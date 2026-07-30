@@ -125,6 +125,7 @@ function createWindow(url = null) {
     });
 
     win.setMenuBarVisibility(false);
+// ← TEMP DEBUG: remove after fixing white screen
 
     const loadWithRetry = () => {
         // If a specific URL is provided, we still load the BASE URL first to ensure
@@ -376,7 +377,7 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
 
             const child = fork(bootstrapPath, [], {
                 cwd: getAppPath('backend'),
-                silent: true,   // ← capture stdio so we can read the real error
+                silent: true,
                 env: {
                     ...process.env,
                     NODE_PATH: nodeModulesPath,

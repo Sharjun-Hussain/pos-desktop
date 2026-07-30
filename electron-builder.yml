@@ -94,7 +94,7 @@ files:
   - keys/**
 
 extraResources:
-  - from: ../point-of-sale-api-OLD
+  - from: ../backend
     to: backend
     filter:
       - "src/**"
