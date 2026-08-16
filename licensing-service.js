@@ -94,13 +94,13 @@ class LicensingService {
      *    Remember to set it back to false before building for release!
      */
     getSyncStatus() {
-        const TEST_FORCE_SYNC = false; // ← set to true to test the sync popup
+        const TEST_FORCE_SYNC = process.env.TEST_LICENSE_ALERT === 'GRACE_PERIOD';
 
         const check = this.verifyLicense();
-        if (!check.valid) return { needsSync: true, daysSinceSync: 999 };
+        if (!check.valid && !TEST_FORCE_SYNC) return { needsSync: true, daysSinceSync: 999 };
 
         if (TEST_FORCE_SYNC) {
-            console.log('🧪 TEST_FORCE_SYNC is ON — forcing 30-day sync check.');
+            console.log('🧪 Simulating Day 30 Offline Grace Period Alert...');
             return { needsSync: true, isExpired: false, daysSinceSync: 30 };
         }
 

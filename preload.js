@@ -7,10 +7,14 @@ contextBridge.exposeInMainWorld(
         activateLicense: (key) => ipcRenderer.invoke('activate-license', key),
         activationComplete: () => ipcRenderer.send('activation-complete'),
         exitApp: () => ipcRenderer.send('exit-app'),
+        getLicenseInfo: () => ipcRenderer.invoke('get-license-info'),
+        getLicenseAlerts: () => ipcRenderer.invoke('get-license-alerts'),
+        getServerUrl: () => ipcRenderer.sendSync('get-server-url'),
         
         // Database Setup
         testDbConnection: (config) => ipcRenderer.invoke('test-db-connection', config),
         runSetupWizard: (data) => ipcRenderer.invoke('run-setup-wizard', data),
+        testServerConnection: (url) => ipcRenderer.invoke('test-server-connection', url),
         syncLicense: () => ipcRenderer.invoke('sync-license'),
         
         // Printing

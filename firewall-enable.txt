@@ -1,0 +1,5 @@
+Open Powershell with Administrator Privileges
+
+Type Following : 
+ 
+ New-NetFirewallRule -DisplayName "Inzeedo POS Port 5000" -Direction Inbound -LocalPort 5000 -Protocol TCP -Action Allow

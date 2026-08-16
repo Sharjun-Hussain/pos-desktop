@@ -10,21 +10,37 @@ const dotenvPath = app.isPackaged
     : path.join(__dirname, '../backend/.env');
 
 // Ensure .env exists in userData for production
-if (app.isPackaged && !fs.existsSync(dotenvPath)) {
-    // Template is in extraResources
+if (app.isPackaged) {
     const templatePath = path.join(process.resourcesPath, 'backend/.env.example');
-    try {
-        if (fs.existsSync(templatePath)) {
-            fs.copyFileSync(templatePath, dotenvPath);
-        } else {
-            // Create a minimal .env if template is missing
-            fs.writeFileSync(dotenvPath, 'PORT=5000\nNODE_ENV=production\nAPI_VERSION=v1\nAPP_PLATFORM=DESKTOP\n');
+    
+    if (!fs.existsSync(dotenvPath)) {
+        try {
+            if (fs.existsSync(templatePath)) {
+                fs.copyFileSync(templatePath, dotenvPath);
+            } else {
+                fs.writeFileSync(dotenvPath, 'PORT=5000\nNODE_ENV=production\nAPI_VERSION=v1\nAPP_PLATFORM=DESKTOP\n');
+            }
+        } catch (err) {
+            console.error('Failed to initialize .env:', err);
         }
-    } catch (err) {
-        console.error('Failed to initialize .env:', err);
+    } else {
+        // Migration: If .env exists but is missing QZ_PRIVATE_KEY, append it from template
+        try {
+            const currentEnv = fs.readFileSync(dotenvPath, 'utf8');
+            if (!currentEnv.includes('QZ_PRIVATE_KEY') && fs.existsSync(templatePath)) {
+                const templateEnv = fs.readFileSync(templatePath, 'utf8');
+                const qzMatch = templateEnv.match(/QZ_PRIVATE_KEY=["']?(.+?)["']?(?:\r?\n|$)/s) || templateEnv.match(/QZ_PRIVATE_KEY=.*$/sm);
+                if (qzMatch) {
+                    fs.appendFileSync(dotenvPath, `\n\n${qzMatch[0]}\n`);
+                    console.log('Appended missing QZ_PRIVATE_KEY to existing .env');
+                }
+            }
+        } catch (err) {
+            console.error('Failed to migrate .env:', err);
+        }
     }
 }
-require('dotenv').config({ path: dotenvPath });
+require('dotenv').config({ path: dotenvPath, override: true });
 
 const licensingService = require('./licensing-service');
 
@@ -44,6 +60,7 @@ function createSetupWindow(mode = null) {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            devTools: !app.isPackaged || process.env.ELECTRON_IS_DEV === 'true',
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -59,6 +76,10 @@ function createSetupWindow(mode = null) {
 }
 
 async function checkDbConfigured() {
+    // Client mode: no local DB needed — just need a server URL
+    if (process.env.APP_MODE === 'client') {
+        return !!process.env.SERVER_URL;
+    }
     if (!process.env.DB_NAME) return false;
     try {
         const connection = await mysql.createConnection({
@@ -108,7 +129,10 @@ function getAppPath(relativeProd, relativeDev) {
 function createWindow(url = null) {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     const isDev = !app.isPackaged || process.env.ELECTRON_IS_DEV === 'true';
-    const baseUrl = isDev ? 'http://localhost:3000' : 'http://localhost:5000';
+    // Client mode: load from the remote server URL instead of localhost
+    const baseUrl = process.env.APP_MODE === 'client' && process.env.SERVER_URL
+        ? process.env.SERVER_URL
+        : (isDev ? 'http://localhost:3000' : 'http://localhost:5000');
     
     const win = new BrowserWindow({
         width: width,
@@ -119,6 +143,7 @@ function createWindow(url = null) {
             partition: 'persist:inzeedo',
             nodeIntegration: false,
             contextIsolation: true,
+            devTools: isDev,
             preload: path.join(__dirname, 'preload.js')
         },
         icon: path.join(__dirname, 'assets/icon.png')
@@ -155,6 +180,10 @@ function createWindow(url = null) {
         if (!url) win.maximize();
         win.show();
         win.focus();
+        if (isDev) {
+            // ← TEMP DEBUG: open DevTools so we can see network errors on Client PCs (Dev only)
+            win.webContents.openDevTools();
+        }
     });
 
     loadWithRetry();
@@ -181,10 +210,12 @@ function createWindow(url = null) {
             menu.append(new MenuItem({ type: 'separator' }));
         }
 
-        if (params.editFlags.canCopy) menu.append(new MenuItem({ role: 'copy' }));
-        if (params.editFlags.canPaste) menu.append(new MenuItem({ role: 'paste' }));
-        if (params.editFlags.canCut) menu.append(new MenuItem({ role: 'cut' }));
-        if (params.editFlags.canSelectAll) menu.append(new MenuItem({ role: 'selectAll' }));
+        if (params.isEditable || params.selectionText.trim().length > 0) {
+            if (params.editFlags.canCopy) menu.append(new MenuItem({ role: 'copy' }));
+            if (params.editFlags.canPaste) menu.append(new MenuItem({ role: 'paste' }));
+            if (params.editFlags.canCut) menu.append(new MenuItem({ role: 'cut' }));
+            if (params.editFlags.canSelectAll) menu.append(new MenuItem({ role: 'selectAll' }));
+        }
 
         if (menu.items.length > 0) {
             menu.popup({ window: win });
@@ -200,6 +231,12 @@ function createWindow(url = null) {
 }
 
 function startBackend() {
+    // Client mode: the backend runs on the remote server — don't start a local one
+    if (process.env.APP_MODE === 'client') {
+        console.log('ℹ️  Client mode: skipping local backend start.');
+        return;
+    }
+
     console.log("🚀 Starting Inzeedo POS Backend...");
     const backendPath = getAppPath('backend/server.js');
 
@@ -228,9 +265,27 @@ function startBackend() {
 
 // --- IPC HANDLERS ---
 ipcMain.handle('get-hwid', () => {
-    const hwid = licensingService.getHWID();
-    console.log('📡 IPC Request: get-hwid ->', hwid);
-    return hwid;
+    return licensingService.getHWID();
+});
+
+ipcMain.handle('get-license-info', () => {
+    const check = licensingService.verifyLicense();
+    return check.valid ? check.data : null;
+});
+
+let pendingLicenseAlerts = [];
+ipcMain.handle('get-license-alerts', () => {
+    return pendingLicenseAlerts;
+});
+ipcMain.handle('clear-license-alerts', () => {
+    pendingLicenseAlerts = [];
+});
+
+// --- ACTIVATION FLOW ---
+ipcMain.on('get-server-url', (event) => {
+    event.returnValue = process.env.APP_MODE === 'client' && process.env.SERVER_URL 
+        ? process.env.SERVER_URL 
+        : (process.env.ELECTRON_IS_DEV === 'true' || !app.isPackaged ? 'http://localhost:3000' : 'http://localhost:5000');
 });
 
 ipcMain.handle('activate-license', async (event, licenseKey) => {
@@ -339,6 +394,16 @@ ipcMain.handle('print-silent', async (event, { html, printerName, options = {} }
 
 ipcMain.handle('run-setup-wizard', async (event, data) => {
     try {
+        // ── CLIENT MODE: just save the remote server URL ────────────────────
+        if (data.mode === 'client') {
+            updateEnv({ APP_MODE: 'client', SERVER_URL: data.serverUrl });
+            console.log(`✅ Client mode configured. Server URL: ${data.serverUrl}`);
+            return { success: true };
+        }
+
+        // ── SERVER MODE (default): full DB + bootstrap setup ─────────────────
+        updateEnv({ APP_MODE: 'server' });
+
         // 1. Update .env with the new DB credentials
         updateEnv({
             DB_HOST: data.db.host,
@@ -421,6 +486,26 @@ ipcMain.handle('run-setup-wizard', async (event, data) => {
     }
 });
 
+ipcMain.handle('test-server-connection', async (event, url) => {
+    try {
+        // Normalize: strip trailing slash, append a lightweight health endpoint
+        const base = url.replace(/\/+$/, '');
+        const testUrl = `${base}/api/health`;
+        console.log(`🔍 Testing server connection: ${testUrl}`);
+        const response = await axios.get(testUrl, { timeout: 5000 });
+        if (response.status >= 200 && response.status < 400) {
+            return { success: true };
+        }
+        return { success: false, message: `Server returned status ${response.status}` };
+    } catch (err) {
+        // If /api/health doesn't exist the server still responded — treat 404 as reachable
+        if (err.response) {
+            return { success: true };
+        }
+        return { success: false, message: `Could not reach server: ${err.message}` };
+    }
+});
+
 ipcMain.on('activation-complete', async () => {
     // Check DB first to avoid a moment with no windows open
     const dbOk = await checkDbConfigured();
@@ -472,12 +557,34 @@ app.whenReady().then(async () => {
             await licensingService.syncWithServer();
             const afterSyncStatus = licensingService.getSyncStatus();
             
-            if (afterSyncStatus.needsSync) {
-                console.log('❌ Silent sync failed. Mandatory online check required.');
+            if (afterSyncStatus.isExpired) {
+                console.log('❌ Silent sync failed and grace period over. Mandatory online check required.');
                 createSetupWindow('sync');
                 return;
+            } else if (afterSyncStatus.needsSync) {
+                const daysLeft = 32 - afterSyncStatus.daysSinceSync;
+                console.log(`⚠️ Background sync failed. Offline grace period active (${daysLeft} days remaining).`);
+                pendingLicenseAlerts.push({
+                    type: 'warning',
+                    title: 'Internet Connection Required Soon',
+                    message: `Your system has been offline for ${afterSyncStatus.daysSinceSync} days. You must connect to the internet within ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} to verify your license, otherwise the system will be locked.`
+                });
             } else {
                 console.log('✅ Background sync successful.');
+            }
+        }
+
+        // Native Expiry Alert (Warn 7 days before cloud subscription expiration)
+        if (check.data && check.data.expiry) {
+            const expiryDate = new Date(check.data.expiry);
+            const daysToExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+            
+            if (daysToExpiry > 0 && daysToExpiry <= 7) {
+                pendingLicenseAlerts.push({
+                    type: 'info',
+                    title: 'Subscription Expiring Soon',
+                    message: `Your software subscription will expire in ${daysToExpiry} ${daysToExpiry === 1 ? 'day' : 'days'}. Please ensure your payment is up to date on the cloud dashboard.`
+                });
             }
         }
 
@@ -491,6 +598,30 @@ app.whenReady().then(async () => {
         }
     } else {
         console.log('❌ License Check Failed:', check.reason);
+        
+        // --- EMERGENCY SEAMLESS RENEWAL ---
+        // If the local license simply hit its timestamp expiry, the customer might have renewed on the cloud.
+        // Attempt a seamless background sync using the old key before kicking them out to the wizard.
+        if (check.reason === 'LICENSE_EXPIRED') {
+            console.log('⚠️ Local license expired. Attempting emergency cloud sync...');
+            const synced = await licensingService.syncWithServer();
+            if (synced) {
+                const recheck = licensingService.verifyLicense();
+                if (recheck.valid) {
+                    console.log('✅ Emergency sync successful. License renewed!');
+                    const dbOk = await checkDbConfigured();
+                    if (dbOk) {
+                        startBackend();
+                        createWindow();
+                    } else {
+                        createSetupWindow();
+                    }
+                    return;
+                }
+            }
+            console.log('❌ Emergency sync failed or license is still expired on the cloud.');
+        }
+
         createSetupWindow();
     }
 
